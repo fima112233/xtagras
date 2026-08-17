@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}Поиск{% endblock %}
+{% block content %}
+<div class="card">
+  <form method="get" action="{{ url_for('search') }}">
+    <input type="text" name="q" value="{{ q }}" placeholder="Искать людей и посты..." required>
+    <button class="btn btn-primary" type="submit">Найти</button>
+  </form>
+</div>
+
+{% if q %}
+  <h3>Люди</h3>
+  <div class="people">
+    {% for person in results %}
+      <div class="card person">
+        <a href="{{ url_for('profile', username=person.username) }}">{{ avatar(person) }}</a>
+        <div class="person-info">
+          <a class="author" href="{{ url_for('profile', username=person.username) }}">{{ person.display_name or person.username }}</a>
+          <span class="handle">@{{ person.username }}</span>
+          {% if person.is_verified %}<span class="badge">✓</span>{% endif %}
+          <div class="muted">{{ person.bio|truncate(60) }}</div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card empty">Никого не нашли.</div>
+    {% endfor %}
+  </div>
+
+  <h3>Посты</h3>
+  {% for post in posts %}
+    {% include "_post.html" %}
+  {% else %}
+    <div class="card empty">Постов не найдено.</div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ site_name }} — соцсеть на Flask{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>Добро пожаловать в {{ site_name }}</h1>
+  <p>Публикуйте посты, комментируйте, лайкайте, подписывайтесь и общайтесь в личных сообщениях.</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="{{ url_for('register') }}">Создать аккаунт</a>
+    <a class="btn btn-ghost" href="{{ url_for('login') }}">Войти</a>
+  </div>
+</div>
+{% endblock %}

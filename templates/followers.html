@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}{{ display_name(user) }} — {{ kind }}{% endblock %}
+{% block content %}
+<h2>{{ display_name(user) }} — {{ kind }} ({{ people|length }})</h2>
+<div class="people">
+  {% for person in people %}
+    <div class="card person">
+      <a href="{{ url_for('profile', username=person.username) }}">{{ avatar(person) }}</a>
+      <div class="person-info">
+        <a class="author" href="{{ url_for('profile', username=person.username) }}">{{ person.display_name or person.username }}</a>
+        <span class="handle">@{{ person.username }}</span>
+        {% if person.is_verified %}<span class="badge">✓</span>{% endif %}
+        {% if person.is_admin %}<span class="tag tag-admin">админ</span>{% endif %}
+        <div class="muted">{{ person.bio|truncate(60) }}</div>
+      </div>
+    </div>
+  {% else %}
+    <div class="card empty">Здесь пока пусто.</div>
+  {% endfor %}
+</div>
+{% endblock %}

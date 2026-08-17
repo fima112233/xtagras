@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Редактировать пост{% endblock %}
+{% block content %}
+<div class="card form-card">
+  <h2>Редактировать пост</h2>
+  <form method="post">
+    <textarea name="content" rows="5" maxlength="2000" required class="mentionable">{{ post.content }}</textarea>
+    <label>Видимость
+      <select name="privacy">
+        <option value="public" {% if post.privacy != 'followers' %}selected{% endif %}>🌍 Для всех</option>
+        <option value="followers" {% if post.privacy == 'followers' %}selected{% endif %}>🔒 Для подписчиков</option>
+      </select>
+    </label>
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn btn-ghost" href="{{ url_for('view_post', post_id=post.id) }}">Отмена</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}Сообщения{% endblock %}
+{% block content %}
+<h2>Сообщения</h2>
+<div class="people">
+  {% for c in conversations %}
+    <a class="card person conversation" href="{{ url_for('conversation', username=c.partner.username) }}">
+      {{ avatar(c.partner) }}
+      <span class="person-info">
+        <span class="author">{{ c.partner.display_name or c.partner.username }}</span>
+        <span class="handle">@{{ c.partner.username }}</span>
+        <span class="muted">{{ c.last.content|truncate(60) }}</span>
+        <span class="time">{{ c.last.created_at|time_ago }}</span>
+      </span>
+      {% if c.unread %}<span class="unread-badge">{{ c.unread }}</span>{% endif %}
+    </a>
+  {% else %}
+    <div class="card empty">Сообщений пока нет. Зайдите в профиль человека и нажмите «Сообщение».</div>
+  {% endfor %}
+</div>
+{% endblock %}

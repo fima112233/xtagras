@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+{% from "_avatar.html" import avatar %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ 'dark' if g.user and g.user.dark_mode else '' }}">
+<nav class="navbar">
+  <a class="brand" href="{{ url_for('index') }}">◈ {{ site_name }}</a>
+  {% if g.user %}
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}">Лента</a>
+      <a href="{{ url_for('users') }}">Люди</a>
+      <a href="{{ url_for('search') }}">Поиск</a>
+      <a href="{{ url_for('bookmarks') }}">Закладки</a>
+      <a href="{{ url_for('messages') }}">Сообщения{% if unread_messages %} <span class="unread">{{ unread_messages }}</span>{% endif %}</a>
+      <a href="{{ url_for('notifications') }}">🔔{% if unread_notifications %} <span class="unread">{{ unread_notifications }}</span>{% endif %}</a>
+      <a href="{{ url_for('profile', username=g.user['username']) }}">Профиль</a>
+      {% if g.user['is_admin'] %}<a class="admin-link" href="{{ url_for('admin') }}">Админка</a>{% endif %}
+    </div>
+    <div class="nav-right">
+      <span class="nav-user">{{ display_name(g.user) }}{% if g.user['is_verified'] %} <span class="badge" title="Подтверждённый аккаунт">✓</span>{% endif %}</span>
+      <form method="post" action="{{ url_for('toggle_theme') }}"><button class="btn btn-ghost btn-sm" title="Переключить тему">{{ '☀️' if g.user.dark_mode else '🌙' }}</button></form>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('settings') }}">Настройки</a>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Выйти</a>
+    </div>
+  {% else %}
+    <div class="nav-right">
+      <a class="btn btn-ghost" href="{{ url_for('login') }}">Войти</a>
+      <a class="btn btn-primary" href="{{ url_for('register') }}">Регистрация</a>
+    </div>
+  {% endif %}
+</nav>
+
+{% if announcement %}
+<div class="announcement">📢 {{ announcement }}</div>
+{% endif %}
+
+<main class="layout">
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+  {% if g.user %}
+  <aside class="sidebar">
+    {% if trending %}
+    <div class="card sidebar-card">
+      <h4>Актуальные темы</h4>
+      {% for t in trending %}
+        <a class="trend" href="{{ url_for('hashtag', tag=t.tag) }}">#{{ t.tag }} <span class="muted">{{ t.count }}</span></a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if trending_posts %}
+    <div class="card sidebar-card">
+      <h4>Популярные посты</h4>
+      {% for tp in trending_posts %}
+        <a class="trend" href="{{ url_for('view_post', post_id=tp.id) }}">{{ tp.content|truncate(50) }} <span class="muted">♥ {{ tp.lc }}</span></a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if suggested %}
+    <div class="card sidebar-card">
+      <h4>Кого читать</h4>
+      {% for s in suggested %}
+        <div class="suggest">
+          <a href="{{ url_for('profile', username=s.username) }}">{{ avatar(s, 'avatar-sm') }}</a>
+          <div class="suggest-info">
+            <a class="author" href="{{ url_for('profile', username=s.username) }}">{{ s.display_name or s.username }}</a>
+            <span class="handle">@{{ s.username }}</span>
+          </div>
+          {% if not s.is_admin %}
+          <form method="post" action="{{ url_for('follow', username=s.username) }}">
+            <button class="btn btn-ghost btn-sm" type="submit">+</button>
+          </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </aside>
+  {% endif %}
+</main>
+<script src="{{ url_for('static', filename='mentions.js') }}"></script>
+<script src="{{ url_for('static', filename='ui.js') }}"></script>
+</body>
+</html>

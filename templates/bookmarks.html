@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Закладки{% endblock %}
+{% block content %}
+<h2>Закладки</h2>
+{% for post in posts %}
+  {% include "_post.html" %}
+{% else %}
+  <div class="card empty">Вы пока ничего не сохранили. Нажмите 🔖 на посте, чтобы сохранить.</div>
+{% endfor %}
+{% endblock %}

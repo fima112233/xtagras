@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}Пост {{ post.id }}{% endblock %}
+{% block content %}
+<div class="card post">
+  <div class="post-head">
+    <a href="{{ url_for('profile', username=author.username) }}">{{ avatar(author) }}</a>
+    <div class="post-meta">
+      <a class="author" href="{{ url_for('profile', username=author.username) }}">{{ author.display_name or author.username }}</a>
+      <span class="handle">@{{ author.username }}</span>
+      {% if author.is_verified %}<span class="badge" title="Подтверждённый аккаунт">✓</span>{% endif %}
+      {% if author.is_admin %}<span class="tag tag-admin">админ</span>{% endif %}
+      <span class="time">{{ post.created_at|time_ago }}</span>
+      {% if post.edited_at %}<span class="time muted">(изменено)</span>{% endif %}
+    </div>
+  </div>
+  <div class="post-content">{{ post.content|rich_text }}</div>
+  <div class="post-actions">
+    {% for emoji in REACTIONS %}
+      <form method="post" action="{{ url_for('toggle_reaction', post_id=post.id) }}">
+        <input type="hidden" name="emoji" value="{{ emoji }}">
+        <button class="btn btn-ghost btn-sm reaction {{ 'active' if post.my_reaction == emoji }}" type="submit">{{ emoji }} <span class="cnt">{{ post.reactions.get(emoji, 0) }}</span></button>
+      </form>
+    {% endfor %}
+    <span class="btn btn-ghost btn-sm">💬 {{ post.comments }}</span>
+    <form method="post" action="{{ url_for('toggle_repost', post_id=post.id) }}">
+      <button class="btn btn-ghost btn-sm {% if post.reposted_by_me %}reposted{% endif %}" type="submit">↻ {{ post.reposts }}</button>
+    </form>
+    <form method="post" action="{{ url_for('toggle_bookmark', post_id=post.id) }}">
+      <button class="btn btn-ghost btn-sm {% if post.bookmarked_by_me %}bookmarked{% endif %}" type="submit">🔖</button>
+    </form>
+    {% if post.can_edit %}
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('edit_post', post_id=post.id) }}">Изменить</a>
+      <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}" onsubmit="return confirm('Удалить пост?');">
+        <button class="btn btn-ghost btn-sm danger" type="submit">Удалить</button>
+      </form>
+    {% endif %}
+    <details class="menu">
+      <summary class="btn btn-ghost btn-sm">⋯</summary>
+      <div class="menu-content">
+        <button type="button" class="btn btn-ghost btn-sm copy-link" data-url="{{ url_for('view_post', post_id=post.id) }}">🔗 Копировать ссылку</button>
+        {% if post.user_id != g.user.id %}
+          <form method="post" action="{{ url_for('report_post', post_id=post.id) }}">
+            <input type="text" name="reason" placeholder="Причина жалобы">
+            <button class="btn btn-ghost btn-sm danger" type="submit">🚩 Пожаловаться</button>
+          </form>
+        {% endif %}
+      </div>
+    </details>
+  </div>
+  <div class="post-views muted">👁 {{ post.views }} просмотров</div>
+</div>
+
+<div class="card">
+  <h3>Комментарии ({{ post.comments }})</h3>
+  <form class="comment-form" method="post" action="{{ url_for('add_comment', post_id=post.id) }}">
+    <textarea name="content" rows="2" maxlength="500" placeholder="Написать комментарий..." required class="mentionable"></textarea>
+    <button class="btn btn-primary btn-sm" type="submit">Отправить</button>
+  </form>
+  <div class="comments">
+    {% for c in comments %}
+      <div class="comment">
+        <a class="avatar-link" href="{{ url_for('profile', username=c.username) }}">{{ avatar(c, 'avatar-sm') }}</a>
+        <div class="comment-body">
+          <div class="comment-head">
+            <a class="author" href="{{ url_for('profile', username=c.username) }}">{{ c.display_name or c.username }}</a>
+            <span class="handle">@{{ c.username }}</span>
+            {% if c.is_verified %}<span class="badge" title="Подтверждённый аккаунт">✓</span>{% endif %}
+            <span class="time">{{ c.created_at|time_ago }}</span>
+          </div>
+          <div>{{ c.content|rich_text }}</div>
+          <details class="reply-details">
+            <summary>Ответить</summary>
+            <form method="post" action="{{ url_for('add_comment', post_id=post.id) }}">
+              <input type="hidden" name="parent_id" value="{{ c.id }}">
+              <textarea name="content" rows="2" maxlength="500" placeholder="Ваш ответ..." required class="mentionable"></textarea>
+              <button class="btn btn-primary btn-sm" type="submit">Ответить</button>
+            </form>
+          </details>
+          {% for r in c.replies %}
+            <div class="comment reply">
+              <a class="avatar-link" href="{{ url_for('profile', username=r.username) }}">{{ avatar(r, 'avatar-sm') }}</a>
+              <div class="comment-body">
+                <div class="comment-head">
+                  <a class="author" href="{{ url_for('profile', username=r.username) }}">{{ r.display_name or r.username }}</a>
+                  <span class="handle">@{{ r.username }}</span>
+                  {% if r.is_verified %}<span class="badge">✓</span>{% endif %}
+                  <span class="time">{{ r.created_at|time_ago }}</span>
+                </div>
+                <div>{{ r.content|rich_text }}</div>
+              </div>
+              {% if r.user_id == g.user.id or g.user.is_admin %}
+                <form method="post" action="{{ url_for('delete_comment', comment_id=r.id) }}" onsubmit="return confirm('Удалить комментарий?');">
+                  <button class="btn btn-ghost btn-sm danger" type="submit">✕</button>
+                </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        {% if c.user_id == g.user.id or g.user.is_admin %}
+          <form method="post" action="{{ url_for('delete_comment', comment_id=c.id) }}" onsubmit="return confirm('Удалить комментарий?');">
+            <button class="btn btn-ghost btn-sm danger" type="submit">✕</button>
+          </form>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="muted">Комментариев пока нет.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

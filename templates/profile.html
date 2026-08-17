@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}{{ display_name(user) }}{% endblock %}
+{% block content %}
+<div class="card profile-head">
+  {{ avatar(user, 'avatar-lg') }}
+  <div class="profile-info">
+    <h2 class="profile-name">
+      {{ display_name(user) }}
+      {% if user.is_verified %}<span class="badge badge-lg" title="Подтверждённый аккаунт">✓</span>{% endif %}
+      {% if user.is_admin %}<span class="tag tag-admin">админ</span>{% endif %}
+    </h2>
+    <p class="handle">@{{ user.username }}</p>
+    {% if not is_me %}
+      <p class="online-status">
+        {% if is_online %}<span class="online-dot"></span> в сети{% else %}был(а): {{ user.last_seen|time_ago if user.last_seen else 'давно' }}{% endif %}
+      </p>
+    {% endif %}
+    <p class="muted">{{ user.bio or 'Без описания.' }}</p>
+    <p class="muted">На сайте с {{ user.created_at[:10] }}</p>
+    <div class="profile-stats">
+      <span><strong>{{ posts_count }}</strong> постов</span>
+      <a href="{{ url_for('followers', username=user.username) }}"><strong>{{ followers }}</strong> подписчиков</a>
+      <a href="{{ url_for('following', username=user.username) }}"><strong>{{ following }}</strong> подписок</a>
+      <span><strong>{{ profile_views }}</strong> просмотров профиля</span>
+    </div>
+    {% if mutual %}<div class="mutual">↔ Вы взаимно подписаны</div>{% endif %}
+  </div>
+  <div class="profile-actions">
+    {% if is_me %}
+      <a class="btn btn-ghost" href="{{ url_for('settings') }}">Настройки</a>
+    {% else %}
+      {% if not user.is_admin %}
+        <form method="post" action="{{ url_for('follow', username=user.username) }}">
+          <button class="btn {{ 'btn-ghost' if is_following else 'btn-primary' }}" type="submit">
+            {{ 'Отписаться' if is_following else 'Подписаться' }}
+          </button>
+        </form>
+        {% if user.allow_dms and not is_blocked %}
+          <a class="btn btn-primary" href="{{ url_for('conversation', username=user.username) }}">Сообщение</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('unblock' if is_blocked else 'block', username=user.username) }}">
+          <button class="btn btn-ghost btn-sm danger" type="submit">{{ 'Разблокировать' if is_blocked else 'Заблокировать' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('unmute' if is_muted else 'mute', username=user.username) }}">
+          <button class="btn btn-ghost btn-sm" type="submit">{{ 'Включить звук' if is_muted else 'Заглушить' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('report_user', username=user.username) }}" class="report-user">
+          <input type="text" name="reason" placeholder="Причина жалобы">
+          <button class="btn btn-ghost btn-sm danger" type="submit">🚩</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+{% if is_blocked %}
+  <div class="card empty">Вы заблокировали этого пользователя.</div>
+{% else %}
+  {% if pinned %}
+    {% set post = pinned %}
+    {% include "_post.html" %}
+  {% endif %}
+  {% for post in posts %}
+    {% if post.id != user.pinned_post_id %}
+      {% include "_post.html" %}
+    {% endif %}
+  {% else %}
+    {% if not pinned %}<div class="card empty">Пока нет постов.</div>{% endif %}
+  {% endfor %}
+{% endif %}
+{% endblock %}

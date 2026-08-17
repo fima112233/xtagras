@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Регистрация{% endblock %}
+{% block content %}
+<div class="card form-card">
+  <h2>Регистрация в {{ site_name }}</h2>
+  <form method="post">
+    <label>Логин
+      <input type="text" name="username" required minlength="3" maxlength="20" autofocus>
+    </label>
+    <label>Отображаемое имя (как вас увидят в постах)
+      <input type="text" name="display_name" maxlength="40">
+    </label>
+    <label>Пароль
+      <input type="password" name="password" required minlength="6">
+    </label>
+    <label>Повторите пароль
+      <input type="password" name="confirm" required minlength="6">
+    </label>
+    <label>О себе (необязательно)
+      <textarea name="bio" rows="3" maxlength="300"></textarea>
+    </label>
+    <button class="btn btn-primary" type="submit">Создать аккаунт</button>
+  </form>
+</div>
+{% endblock %}

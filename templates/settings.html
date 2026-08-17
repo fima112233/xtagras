@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Настройки{% endblock %}
+{% block content %}
+<div class="card form-card">
+  <h2>Настройки</h2>
+  <form method="post" enctype="multipart/form-data">
+    <label>Отображаемое имя (видно в постах)
+      <input type="text" name="display_name" value="{{ g.user.display_name or '' }}" maxlength="40">
+    </label>
+    <label>Логин
+      <input type="text" name="username" value="{{ g.user.username }}" required minlength="3" maxlength="20">
+    </label>
+    <label>О себе
+      <textarea name="bio" rows="3" maxlength="300">{{ g.user.bio or '' }}</textarea>
+    </label>
+
+    <div class="avatar-section">
+      <div class="avatar-preview">
+        {% if g.user.avatar_path %}
+          <img class="avatar-img avatar-lg" src="{{ avatar_url(g.user) }}" alt="">
+        {% else %}
+          <span class="avatar avatar-lg" style="background:{{ g.user.avatar_color or '#6c5ce7' }}">{{ (g.user.display_name or g.user.username)[0]|upper }}</span>
+        {% endif %}
+      </div>
+      <label>Аватар
+        <input type="file" name="avatar" accept="image/png,image/jpeg,image/gif,image/webp">
+      </label>
+      {% if g.user.avatar_path %}
+        <label class="checkbox-label">
+          <input type="checkbox" name="remove_avatar">
+          Удалить аватар
+        </label>
+      {% endif %}
+    </div>
+
+    <label>Цвет аватара (для аватара-буквы)
+      <input type="color" name="avatar_color" value="{{ g.user.avatar_color or '#6c5ce7' }}">
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" name="allow_dms" {% if g.user.allow_dms %}checked{% endif %}>
+      Разрешить личные сообщения
+    </label>
+    <label class="checkbox-label">
+      <input type="checkbox" name="dark_mode" {% if g.user.dark_mode %}checked{% endif %}>
+      Тёмная тема
+    </label>
+
+    <hr>
+
+    <h3>Смена пароля</h3>
+    <label>Текущий пароль
+      <input type="password" name="current_password">
+    </label>
+    <label>Новый пароль
+      <input type="password" name="new_password" minlength="6">
+    </label>
+    <label>Повторите новый пароль
+      <input type="password" name="confirm_password" minlength="6">
+    </label>
+
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a class="btn btn-ghost" href="{{ url_for('profile', username=g.user.username) }}">Отмена</a>
+  </form>
+</div>
+
+<div class="card form-card">
+  <h2>Данные и аккаунт</h2>
+  <p class="muted">Скачать все свои данные в формате JSON.</p>
+  <a class="btn btn-ghost" href="{{ url_for('export_data') }}">⬇ Экспорт данных</a>
+  {% if not g.user.is_admin %}
+    <form method="post" action="{{ url_for('delete_account') }}" onsubmit="return confirm('Удалить аккаунт безвозвратно? Все посты, сообщения и данные будут удалены.');">
+      <button class="btn btn-ghost danger" type="submit">Удалить аккаунт</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

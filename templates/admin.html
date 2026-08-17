@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель{% endblock %}
+{% block content %}
+<h2>Админ-панель</h2>
+
+<div class="stats">
+  <div class="stat"><strong>{{ stats.users }}</strong>пользователей</div>
+  <div class="stat"><strong>{{ stats.posts }}</strong>постов</div>
+  <div class="stat"><strong>{{ stats.comments }}</strong>комментариев</div>
+  <div class="stat"><strong>{{ stats.likes }}</strong>реакций</div>
+  <div class="stat"><strong>{{ stats.reposts }}</strong>репостов</div>
+  <div class="stat"><strong>{{ stats.verified }}</strong>с галочкой</div>
+  <div class="stat"><strong>{{ stats.banned }}</strong>заблокировано</div>
+  <div class="stat"><strong>{{ stats.reports }}</strong>жалоб</div>
+</div>
+
+<div class="card">
+  <h3>Объявление на сайте</h3>
+  <form method="post" action="{{ url_for('admin_announcement') }}">
+    <input type="text" name="announcement" value="{{ announcement or '' }}" placeholder="Текст объявления (пусто — скрыть)">
+    <button class="btn btn-primary btn-sm" type="submit">Сохранить</button>
+  </form>
+</div>
+
+<h3>Жалобы</h3>
+{% if reports %}
+  <table class="table">
+    <thead>
+      <tr><th>От</th><th>Тип</th><th>Цель</th><th>Причина</th><th>Действия</th></tr>
+    </thead>
+    <tbody>
+      {% for r in reports %}
+        <tr>
+          <td>{{ r.reporter_display or r.reporter_name }}</td>
+          <td>{{ 'Пользователь' if r.target_type == 'user' else 'Пост' }}</td>
+          <td class="post-cell">{{ r.target_label }}</td>
+          <td>{{ r.reason or '—' }}</td>
+          <td class="actions-cell">
+            <form method="post" action="{{ url_for('admin_report_delete_target', report_id=r.id) }}" onsubmit="return confirm('Удалить контент?');">
+              <button class="btn btn-ghost btn-sm danger" type="submit">Удалить контент</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_dismiss_report', report_id=r.id) }}">
+              <button class="btn btn-ghost btn-sm" type="submit">Отклонить</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="card empty">Открытых жалоб нет.</div>
+{% endif %}
+
+<h3>Пользователи</h3>
+<table class="table">
+  <thead>
+    <tr><th>ID</th><th>Пользователь</th><th>Постов</th><th>Статус</th><th>Действия</th></tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>
+          <a class="author" href="{{ url_for('profile', username=u.username) }}">{{ u.display_name or u.username }}</a>
+          <span class="handle">@{{ u.username }}</span>
+          {% if u.is_verified %}<span class="badge">✓</span>{% endif %}
+          {% if u.is_admin %}<span class="tag tag-admin">админ</span>{% endif %}
+          {% if u.is_banned %}<span class="tag tag-banned">заблокирован</span>{% endif %}
+        </td>
+        <td>{{ u.post_count }}</td>
+        <td>
+          {% if u.is_banned %}заблокирован{% elif u.is_admin %}админ{% else %}обычный{% endif %}
+        </td>
+        <td class="actions-cell">
+          {% if u.id != g.user.id %}
+            {% if u.is_banned %}
+              <form method="post" action="{{ url_for('admin_unban', user_id=u.id) }}">
+                <button class="btn btn-ghost btn-sm" type="submit">Разблокировать</button>
+              </form>
+            {% else %}
+              <form method="post" action="{{ url_for('admin_ban', user_id=u.id) }}" onsubmit="return confirm('Заблокировать пользователя?');">
+                <button class="btn btn-ghost btn-sm danger" type="submit">Заблокировать</button>
+              </form>
+            {% endif %}
+            {% if u.is_verified %}
+              <form method="post" action="{{ url_for('admin_unverify', user_id=u.id) }}">
+                <button class="btn btn-ghost btn-sm" type="submit">Снять галочку</button>
+              </form>
+            {% else %}
+              <form method="post" action="{{ url_for('admin_verify', user_id=u.id) }}">
+                <button class="btn btn-ghost btn-sm" type="submit">Выдать галочку</button>
+              </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('admin_delete_user', user_id=u.id) }}" onsubmit="return confirm('Удалить пользователя и весь его контент?');">
+              <button class="btn btn-ghost btn-sm danger" type="submit">Удалить</button>
+            </form>
+          {% else %}
+            <span class="muted">это вы</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3>Последние посты</h3>
+<table class="table">
+  <thead>
+    <tr><th>ID</th><th>Автор</th><th>Содержимое</th><th>Дата</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for p in posts %}
+      <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.display_name or p.username }}</td>
+        <td class="post-cell">{{ p.content|truncate(60) }}</td>
+        <td>{{ p.created_at|time_ago }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_delete_post', post_id=p.id) }}" onsubmit="return confirm('Удалить пост?');">
+            <button class="btn btn-ghost btn-sm danger" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5">Постов нет.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

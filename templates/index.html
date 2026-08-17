@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Лента{% endblock %}
+{% block content %}
+<div class="feed-toggle">
+  <a class="btn btn-sm {{ 'btn-primary' if scope == 'all' else 'btn-ghost' }}" href="{{ url_for('index', feed='all') }}">Все посты</a>
+  <a class="btn btn-sm {{ 'btn-primary' if scope == 'following' else 'btn-ghost' }}" href="{{ url_for('index', feed='following') }}">Подписки</a>
+</div>
+
+<div class="card composer">
+  <form method="post" action="{{ url_for('create_post') }}">
+    <textarea name="content" rows="2" maxlength="2000" placeholder="Что нового? Можно #хэштеги и @упоминания" required class="mentionable"></textarea>
+    <div class="composer-actions">
+      <button type="button" class="btn btn-ghost btn-sm emoji-toggle">😀</button>
+      <select name="privacy" class="privacy-select">
+        <option value="public">🌍 Для всех</option>
+        <option value="followers">🔒 Для подписчиков</option>
+      </select>
+      <button class="btn btn-primary" type="submit">Опубликовать</button>
+    </div>
+  </form>
+</div>
+
+{% if feed %}
+  {% for item in feed %}
+    {% if item.kind == 'repost' %}
+      <div class="repost-header">↻ <a href="{{ url_for('profile', username=item.reposted_by.username) }}">{{ item.reposted_by.display_name or item.reposted_by.username }}</a> репостнул(а)</div>
+      {% set post = item.post %}
+      {% include "_post.html" %}
+    {% else %}
+      {% set post = item %}
+      {% include "_post.html" %}
+    {% endif %}
+  {% endfor %}
+{% else %}
+  <div class="card empty">Пока пусто. Напишите первый пост или подпишитесь на кого-нибудь.</div>
+{% endif %}
+{% endblock %}

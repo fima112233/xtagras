@@ -1,0 +1,7 @@
+{% macro avatar(user, cls='') -%}
+  {%- if user and user.avatar_path -%}
+    <img class="avatar-img {{ cls }}" src="{{ avatar_url(user) }}" alt="{{ display_name(user) }}">
+  {%- else -%}
+    <span class="avatar {{ cls }}" style="background:{{ (user and user.avatar_color) or '#6c5ce7' }}">{{ ((user and (user.display_name or user.username)) or '?')[0]|upper }}</span>
+  {%- endif -%}
+{%- endmacro %}

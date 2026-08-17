@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<h2>Уведомления</h2>
+<div class="people">
+  {% for n in notifs %}
+    <div class="card person notif">
+      <a href="{{ url_for('profile', username=n.username) }}">{{ avatar(n) }}</a>
+      <div class="person-info">
+        <span>
+          <a class="author" href="{{ url_for('profile', username=n.username) }}">{{ n.display_name or n.username }}</a>
+          {{ n.text }}
+        </span>
+        <span class="time">{{ n.created_at|time_ago }}</span>
+      </div>
+      {% if n.post_id %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('view_post', post_id=n.post_id) }}">К посту</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="card empty">Уведомлений пока нет.</div>
+  {% endfor %}
+</div>
+{% endblock %}

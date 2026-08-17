@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_avatar.html" import avatar %}
+{% block title %}Чат с {{ display_name(partner) }}{% endblock %}
+{% block content %}
+<div class="card chat-head">
+  <a href="{{ url_for('profile', username=partner.username) }}">{{ avatar(partner) }}</a>
+  <div>
+    <a class="author" href="{{ url_for('profile', username=partner.username) }}">{{ partner.display_name or partner.username }}</a>
+    <span class="handle">@{{ partner.username }}</span>
+  </div>
+</div>
+
+<div class="card chat-log">
+  {% for m in msgs %}
+    <div class="msg {% if m.sender_id == g.user.id %}msg-own{% endif %}">
+      <div class="msg-text">{{ m.content|rich_text }}</div>
+      <div class="msg-time">
+        {{ m.created_at|time_ago }}
+        {% if m.sender_id == g.user.id %}
+          <form method="post" action="{{ url_for('delete_message', msg_id=m.id) }}" class="inline-form" onsubmit="return confirm('Удалить сообщение?');">
+            <button class="btn btn-ghost btn-sm danger" type="submit">✕</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="empty">Нет сообщений. Напишите первым!</div>
+  {% endfor %}
+</div>
+
+{% if can_send %}
+<div class="card chat-input">
+  <form method="post">
+    <textarea name="content" rows="2" maxlength="1000" placeholder="Сообщение..." required class="mentionable"></textarea>
+    <button class="btn btn-primary" type="submit">Отправить</button>
+  </form>
+</div>
+{% else %}
+<div class="card empty">Нельзя написать этому пользователю (он отключил ЛС или вы заблокированы).</div>
+{% endif %}
+{% endblock %}
